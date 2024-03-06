@@ -36,4 +36,12 @@ export class UserService {
       },
     });
   }
+
+  async findById(id: number) {
+    return await this.databaseService.user.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
 }

@@ -14,7 +14,8 @@ export class AuthService {
 
   async validateUser(loginDto: LoginDto) {
     const user = await this.userService.findByEmail(loginDto.email);
-    if (user && compare(loginDto.password, user.password)) {
+
+    if (user && (await compare(loginDto.password, user.password))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
@@ -34,7 +35,29 @@ export class AuthService {
       user,
       backendTokens: {
         accessToken: await this.jwtService.signAsync(payload, {
-          expiresIn: '1h',
+          expiresIn: '20s',
+          secret: process.env.JWT_SECRET_KEY,
+        }),
+        refreshToken: await this.jwtService.signAsync(payload, {
+          expiresIn: '7d',
+          secret: process.env.JWT_REFRESH_KEY,
+        }),
+      },
+    };
+  }
+
+  async refreshToken(user: any) {
+    const payload = {
+      email: user.email,
+      sub: {
+        name: user.name,
+      },
+    };
+
+    return {
+      backendTokens: {
+        accessToken: await this.jwtService.signAsync(payload, {
+          expiresIn: '20s',
           secret: process.env.JWT_SECRET_KEY,
         }),
         refreshToken: await this.jwtService.signAsync(payload, {
